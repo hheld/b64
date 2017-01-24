@@ -88,8 +88,61 @@ char *b64_encode(const char *s)
     return out;
 }
 
+long indexIn(const char *a, char c)
+{
+    const char *p = strchr(a, c);
+
+    if(p)
+    {
+        return p - a;
+    }
+
+    return 0;
+}
+
 char *b64_decode(const char *s)
 {
-    (void) s;
-    return 0;
+    const size_t s_len = strlen(s);
+
+    if(!s_len%4) return 0;
+
+    // This can only be 0, 1, or 2. Otherwise, something is wrong ...
+    size_t numPaddingChars = 0;
+
+    if(s_len>=2)
+    {
+        if(s[s_len-1]=='=') ++numPaddingChars;
+        if(s[s_len-2]=='=') ++numPaddingChars;
+    }
+
+    const size_t out_len = 3*s_len/4-numPaddingChars;
+
+    char *out = malloc(out_len+1);
+    out[out_len] = '\0';
+
+    int j = 0;
+    long b[4];
+    size_t i;
+
+    for(i=0; i<s_len; i+=4)
+    {
+        b[0] = indexIn(alphabet, s[i]);
+        b[1] = indexIn(alphabet, s[i+1]);
+        b[2] = indexIn(alphabet, s[i+2]);
+        b[3] = indexIn(alphabet, s[i+3]);
+
+        out[j++] = (char) ((b[0] << 2) | (b[1] >> 4));
+
+        if(b[2] < 64)
+        {
+            out[j++] = (char) ((b[1] << 4) | (b[2] >> 2));
+
+            if(b[3] < 64)
+            {
+                out[j++] = (char) ((b[2] << 6) | b[3]);
+            }
+        }
+    }
+
+    return out;
 }

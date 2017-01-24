@@ -58,3 +58,51 @@ BOOST_AUTO_TEST_CASE(Encode_WithWindowsLineBreak)
 
     free(c_b64);
 }
+
+BOOST_AUTO_TEST_CASE(Decode_Padding0)
+{
+    std::string s("VGhpcyBpcyBhIHRlc3Qh");
+
+    char *dec = b64_decode(s.c_str());
+    std::string s_dec(dec);
+
+    BOOST_CHECK(s_dec=="This is a test!");
+
+    free(dec);
+}
+
+BOOST_AUTO_TEST_CASE(Decode_Padding1)
+{
+    std::string s("VGhpcyBpcyBhIHRlc3Q=");
+
+    char *dec = b64_decode(s.c_str());
+    std::string s_dec(dec);
+
+    BOOST_CHECK(s_dec=="This is a test");
+
+    free(dec);
+}
+
+BOOST_AUTO_TEST_CASE(Decode_Padding2)
+{
+    std::string s("VGhpcyBpcyBhIHRlc3QhIQ==");
+
+    char *dec = b64_decode(s.c_str());
+    std::string s_dec(dec);
+
+    BOOST_CHECK(s_dec=="This is a test!!");
+
+    free(dec);
+}
+
+BOOST_AUTO_TEST_CASE(Decode_WithWindowsLineBreak)
+{
+    std::string s("VGhpcyBpcyBhDQp0ZXN0IQ==");
+
+    char *dec = b64_decode(s.c_str());
+    std::string s_dec(dec);
+
+    BOOST_CHECK(s_dec=="This is a\r\ntest!");
+
+    free(dec);
+}
