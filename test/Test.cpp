@@ -106,3 +106,17 @@ BOOST_AUTO_TEST_CASE(Decode_WithWindowsLineBreak)
 
     free(dec);
 }
+
+BOOST_AUTO_TEST_CASE(Encode_FromFileAndDecode)
+{
+    std::string path("./encodeFromFileTest.txt");
+
+   char *enc = b64_encodeFile(path.c_str());
+   char *dec = b64_decode(enc);
+   std::string s_dec(dec);
+
+   BOOST_CHECK(s_dec=="This is text within the file.\n");
+
+   free(enc);
+   free(dec);
+}

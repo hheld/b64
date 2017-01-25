@@ -17,5 +17,12 @@ char *b64_encode(const char *s);
  */
 char* b64_decode(const char *s);
 
+/**
+ * Encodes the contents of the given file \a fileName in Base64.
+ *
+ * @param fileName Name, i.e. path, of the file whose content is to be encoded
+ * @return File content encoded in Base64
+ */
+char *b64_encodeFile(const char *fileName);
 
 #endif // B64_H

@@ -6,7 +6,13 @@ include_directories(${b64_SOURCE_DIR}/src
 
 add_definitions(-DBOOST_TEST_DYN_LINK)
 
-add_executable(Test Test.cpp)
+add_executable(Test
+    Test.cpp
+    encodeFromFileTest.txt
+)
+
+configure_file(encodeFromFileTest.txt encodeFromFileTest.txt COPYONLY)
+configure_file(encodeFromFileTest.txt ../encodeFromFileTest.txt COPYONLY)
 
 target_link_libraries(Test
                       b64

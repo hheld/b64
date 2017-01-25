@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 static const char alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                                "abcdefghijklmnopqrstuvwxyz"
@@ -145,4 +146,43 @@ char *b64_decode(const char *s)
     }
 
     return out;
+}
+
+char *b64_encodeFile(const char *fileName)
+{
+    FILE *file;
+    long fileSize;
+    char *contents;
+
+    file = fopen(fileName, "rb");
+
+    if(file==NULL) return NULL;
+
+    // get file size:
+    fseek(file, 0, SEEK_END);
+    fileSize = ftell(file);
+    rewind(file);
+
+    // allocate space for content and read the file
+    contents = malloc((size_t)fileSize*sizeof(char)+1);
+    contents[fileSize] = '\0';
+
+    if(contents==NULL) return NULL;
+
+    size_t bytesRead = fread(contents, 1, (size_t)fileSize, file);
+
+    if(bytesRead!=(size_t)fileSize)
+    {
+        free(contents);
+        return NULL;
+    }
+
+    fclose(file);
+
+    // encode to Base64
+    char *encodedContents = b64_encode(contents);
+
+    free(contents);
+
+    return encodedContents;
 }
