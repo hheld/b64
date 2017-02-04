@@ -8,9 +8,9 @@ static const char alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                                "abcdefghijklmnopqrstuvwxyz"
                                "0123456789+/=";
 
-char *b64_encode(const char *s)
+char *b64_encode(const char *s, const unsigned long numBytes, unsigned long *encodedNumBytes)
 {
-    size_t srcLength = strlen(s);
+    size_t srcLength = numBytes;
     size_t originalLength = srcLength;
 
     switch(srcLength%3)
@@ -86,6 +86,11 @@ char *b64_encode(const char *s)
 
     out[4*srcLength/3] = '\0';
 
+    if(encodedNumBytes)
+    {
+        *encodedNumBytes = 4*srcLength/3;
+    }
+
     return out;
 }
 
@@ -101,22 +106,20 @@ long indexIn(const char *a, char c)
     return 0;
 }
 
-char *b64_decode(const char *s)
+char *b64_decode(const char *s, const unsigned long numBytes, unsigned long *decodedNumBytes)
 {
-    const size_t s_len = strlen(s);
-
-    if(!s_len%4) return 0;
+    if(!numBytes%4) return 0;
 
     // This can only be 0, 1, or 2. Otherwise, something is wrong ...
     size_t numPaddingChars = 0;
 
-    if(s_len>=2)
+    if(numBytes>=2)
     {
-        if(s[s_len-1]=='=') ++numPaddingChars;
-        if(s[s_len-2]=='=') ++numPaddingChars;
+        if(s[numBytes-1]=='=') ++numPaddingChars;
+        if(s[numBytes-2]=='=') ++numPaddingChars;
     }
 
-    const size_t out_len = 3*s_len/4-numPaddingChars;
+    const size_t out_len = 3*numBytes/4-numPaddingChars;
 
     char *out = malloc(out_len+1);
     out[out_len] = '\0';
@@ -125,7 +128,7 @@ char *b64_decode(const char *s)
     long b[4];
     size_t i;
 
-    for(i=0; i<s_len; i+=4)
+    for(i=0; i<numBytes; i+=4)
     {
         b[0] = indexIn(alphabet, s[i]);
         b[1] = indexIn(alphabet, s[i+1]);
@@ -145,10 +148,15 @@ char *b64_decode(const char *s)
         }
     }
 
+    if(decodedNumBytes)
+    {
+        *decodedNumBytes = out_len;
+    }
+
     return out;
 }
 
-char *b64_encodeFile(const char *fileName)
+char *b64_encodeFile(const char *fileName, unsigned long *numBytes)
 {
     FILE *file;
     long fileSize;
@@ -164,7 +172,7 @@ char *b64_encodeFile(const char *fileName)
     rewind(file);
 
     // allocate space for content and read the file
-    contents = malloc((size_t)fileSize*sizeof(char)+1);
+    contents = malloc((size_t)(fileSize+1)*sizeof(char));
     contents[fileSize] = '\0';
 
     if(contents==NULL) return NULL;
@@ -180,9 +188,48 @@ char *b64_encodeFile(const char *fileName)
     fclose(file);
 
     // encode to Base64
-    char *encodedContents = b64_encode(contents);
+    char *encodedContents = b64_encode(contents, bytesRead, numBytes);
 
     free(contents);
 
     return encodedContents;
+}
+
+char *b64_decodeFile(const char *fileName, unsigned long *numBytes)
+{
+    FILE *file;
+    long fileSize;
+    char *contents;
+
+    file = fopen(fileName, "rb");
+
+    if(file==NULL) return NULL;
+
+    // get file size:
+    fseek(file, 0, SEEK_END);
+    fileSize = ftell(file);
+    rewind(file);
+
+    // allocate space for content and read the file
+    contents = malloc((size_t)(fileSize+1)*sizeof(char));
+    contents[fileSize] = '\0';
+
+    if(contents==NULL) return NULL;
+
+    size_t bytesRead = fread(contents, 1, (size_t)fileSize, file);
+
+    if(bytesRead!=(size_t)fileSize)
+    {
+        free(contents);
+        return NULL;
+    }
+
+    fclose(file);
+
+    // encode to Base64
+    char *decodedContents = b64_decode(contents, bytesRead, numBytes);
+
+    free(contents);
+
+    return decodedContents;
 }
