@@ -1,3 +1,8 @@
+/* This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file in the project root
+ * for details.
+ */
+
 #ifndef B64_H
 #define B64_H
 
